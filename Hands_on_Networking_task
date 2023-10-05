@@ -10,7 +10,7 @@ local_dns_server_ip="192.168.42.251"
 # execute as root user:
 sudo su
 
-# Purge uwf and start from scrach
+# Purge utf to remove defaults
 apt purge ufw
 
 # flash ip table rules
