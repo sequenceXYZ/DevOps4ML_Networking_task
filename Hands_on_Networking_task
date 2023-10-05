@@ -52,3 +52,5 @@ all other ports, except 443, should be restricted
 iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 iptables -A INPUT -p tcp -j DROP
 
+#save the rules:
+/sbin/iptables-save
