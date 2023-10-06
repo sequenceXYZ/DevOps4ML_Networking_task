@@ -21,14 +21,15 @@ iptables -L
 
 
 # 25 port TCP of mail server should accept connections from internet
-iptables -A INPUT -p tcp --dport 25 -s $mail_server_ip -j ACCEPT
+iptables -A INPUT -p tcp --dport 25 -d $mail_server_ip -j ACCEPT
 
 # 53 port TCP\UDP should be open for outbound connections for DNS use
-iptables -A OUTPUT -p tcp --dport 53 -s $local_dns_server_ip -j ACCEPT
-iptables -A OUTPUT -p udp --dport 53 -s $local_dns_server_ip -j ACCEPT
+iptables -A OUTPUT -p udp --dport 53 -d $local_dns_server -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 53 -d $local_dns_server -j ACCEPT
 
 # 143 TCP port of mail server must be closed for any connection
-iptables -A INPUT -p tcp --dport 143 -s $mail_server_ip -j DROP
+iptables -A INPUT -p tcp --dport 143 -d $mail_server_ip -j DROP
+iptables -A OUTPUT -p tcp --dport 143 -d $mail_server_ip -j DROP
 
 # 993 TCP port should be opened for HR department and Backup server connection
 iptables -A INPUT -p tcp --dport 993 -m iprange --src-range $hr_department_ip_range -j ACCEPT
@@ -36,6 +37,7 @@ iptables -A INPUT -p tcp --dport 993 -s $backup_server_ip -j ACCEPT
 
 # 465 TCP port could be accessed by IT department only
 iptables -A INPUT -p tcp --dport 465 -m iprange --src-range $it_department_ip_range -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 465 -m iprange --src-range $it_department_ip_range -j ACCEPT
 
 # 587 TCP port must be opened for HR and IT departments only
 iptables -A INPUT -p tcp --dport 587 -m iprange --src-range $hr_department_ip_range -j ACCEPT
