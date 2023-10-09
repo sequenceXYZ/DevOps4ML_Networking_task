@@ -23,36 +23,61 @@ iptables -L
 # 25 port TCP of mail server should accept connections from internet
 iptables -A INPUT -p tcp --dport 25 -d $mail_server_ip -j ACCEPT
 
+
 # 53 port TCP\UDP should be open for outbound connections for DNS use
-iptables -A OUTPUT -p udp --dport 53 -d $local_dns_server -j ACCEPT
-iptables -A OUTPUT -p tcp --dport 53 -d $local_dns_server -j ACCEPT
+iptables -A OUTPUT -p udp --dport 53 -d $local_dns_server_ip -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 53 -d $local_dns_server_ip -j ACCEPT
+
 
 # 143 TCP port of mail server must be closed for any connection
 iptables -A INPUT -p tcp --dport 143 -d $mail_server_ip -j DROP
 iptables -A OUTPUT -p tcp --dport 143 -d $mail_server_ip -j DROP
 
+
 # 993 TCP port should be opened for HR department and Backup server connection
 iptables -A INPUT -p tcp --dport 993 -m iprange --src-range $hr_department_ip_range -j ACCEPT
-iptables -A INPUT -p tcp --dport 993 -s $backup_server_ip -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 993 -m iprange --src-range $hr_department_ip_range -j ACCEPT
+iptables -A INPUT -p tcp --dport 993 -d $backup_server_ip -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 993 -d $backup_server_ip -j ACCEPT
+
 
 # 465 TCP port could be accessed by IT department only
 iptables -A INPUT -p tcp --dport 465 -m iprange --src-range $it_department_ip_range -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 465 -m iprange --src-range $it_department_ip_range -j ACCEPT
 
+
 # 587 TCP port must be opened for HR and IT departments only
+iptables -A INPUT -p tcp --dport 587 -m iprange --src-range $it_department_ip_range -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 587 -m iprange --src-range $it_department_ip_range -j ACCEPT
 iptables -A INPUT -p tcp --dport 587 -m iprange --src-range $hr_department_ip_range -j ACCEPT
-iptables -A INPUT -p tcp --dport 587 -m iprange --src-range $it_department_ip-range -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 587 -m iprange --src-range $hr_department_ip_range -j ACCEPT
+
 
 # Each evening Backup server used SMB default port to get mail backups from Mail server
-iptables -A INPUT -p tcp --dport 445 -s $backup_server_ip -m time --timestart 18:00 --timestop 00:00 -j ACCEPT
-iptables -A INPUT -p tcp --dport 139 -s $backup_server_ip -m time --timestart 18:00 --timestop 00:00 -j ACCEPT
+iptables -A INPUT -p tcp --dport 139 -d $backup_server_ip -m time --timestart 18:00 --timestop 00:00 -j ACCEPT
+iptables -A INPUT -p tcp --dport 445 -d $backup_server_ip -m time --timestart 18:00 --timestop 00:00 -j ACCEPT
+
 
 # SSH default port of Mail server should be available for IT department.
 iptables -A INPUT -p tcp --dport 22 -m iprange --src-range $it_department_ip_range -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 22 -m iprange --src-range $it_department_ip_range -j ACCEPT
 
-all other ports, except 443, should be restricted
+# all other ports, except 443, should be restricted
 iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 iptables -A INPUT -p tcp -j DROP
+iptables -A INPUT -p udp -j DROP
 
-#save the rules:
-/sbin/iptables-save
+# try iptables -P INPUT DROP - cahnge default policy from ACCEPT to DROP if any access is provided
+
+# save the rules:
+iptables-save > /etc/iptables/rules.v4
+iptables-restore < /etc/iptables/rules.v4
+
+# save the rules persistently
+apt install iptables-persistent
+
+# apply rules automatically
+netfilter-persistent
+netfilter-persistent save
+netfilter-persistent start
+
