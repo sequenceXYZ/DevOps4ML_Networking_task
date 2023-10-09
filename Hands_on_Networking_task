@@ -67,7 +67,7 @@ iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 iptables -A INPUT -p tcp -j DROP
 iptables -A INPUT -p udp -j DROP
 
-# try iptables -P INPUT DROP - cahnge default policy from ACCEPT to DROP if any access is provided
+# try iptables -P INPUT DROP - change default policy from ACCEPT to DROP if any access is provided
 
 # save the rules:
 iptables-save > /etc/iptables/rules.v4
